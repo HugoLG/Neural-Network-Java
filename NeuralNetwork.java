@@ -161,6 +161,68 @@ public class NeuralNetwork {
      */
     public void backPropagation(Vector<Double> errors) {
 
+        //First do the back propagation in the last layer
+        Vector<Double> localGradientsOutputLayer = new Vector<Double>();
+        for(int i=0; i<neuralNetwork.get(neuralNetwork.size()-1).size(); i++) {
+            Double opt = neuralNetwork.get(neuralNetwork.size()-1).get(i).getH();
+            localGradientsOutputLayer.add(this.lambda*opt*(1.0-opt)*errors.get(i));
+        }
+
+        for(int i=0; i<neuralNetwork.get(neuralNetwork.size()-2).size(); i++) {
+            Vector<Double> weights = neuralNetwork.get(neuralNetwork.size()-2).get(i).getWeights();
+            Vector<Double> prevDeltaWeights = neuralNetwork.get(neuralNetwork.size()-2).get(i).getPreviousDeltaWeights();
+            Vector<Double> newWeights = new Vector<Double>();
+            Vector<Double> newPrevDeltaWeights = new Vector<Double>();
+
+            for( int j=0; j<neuralNetwork.get(neuralNetwork.size()-1).size(); j++) {
+                Double deltaWeight = this.eta*neuralNetwork.get(neuralNetwork.size()-2).get(i).getH()*localGradientsOutputLayer.get(j)
+                    + this.momentum*prevDeltaWeights.get(j);
+                newWeights.add(weights.get(j)+deltaWeight);
+                newPrevDeltaWeights.add(deltaWeight);
+            }
+
+            neuralNetwork.get(neuralNetwork.size()-2).get(i).setWeights(newWeights);
+            neuralNetwork.get(neuralNetwork.size()-2).get(i).setPreviousDeltaWeights(newPrevDeltaWeights);
+
+        }
+
+        Vector<Double> prevGradients = localGradientsOutputLayer;
+        for(int i=neuralNetwork.size()-2; i>0; i--) {
+
+            Vector<Double> localGradients = new Vector<Double>();
+            for(int j=0; j<neuralNetwork.get(i).size(); j++) {
+                Double sum = 0.0;
+                Vector<Double> neuronWeights = neuralNetwork.get(i).get(j).getWeights();
+                for(int k=0; k<neuronWeights.size(); k++) {
+                    sum += prevGradients.get(k)*neuronWeights.get(k);
+                }
+                Double opt = neuralNetwork.get(i).get(j).getH();
+                localGradients.add(this.lambda*opt*(1.0-opt)*sum);
+            }
+
+            for(int j=0; j<neuralNetwork.get(i-1).size(); j++) {
+                Vector<Double> weights = neuralNetwork.get(i-1).get(j).getWeights();
+                Vector<Double> prevDeltaWeights = neuralNetwork.get(i-1).get(j).getPreviousDeltaWeights();
+                Vector<Double> newWeights = new Vector<Double>();
+                Vector<Double> newPrevDeltaWeights = new Vector<Double>();
+
+                for(int k=0; k<neuralNetwork.get(i).size(); k++) {
+                    Double deltaWeight = this.eta*localGradients.get(k)*neuralNetwork.get(i-1).get(k).getH()
+                        + this.momentum*prevDeltaWeights.get(k);
+                    newPrevDeltaWeights.add(deltaWeight);
+                    newWeights.add(weights.get(j)+deltaWeight);
+                }
+
+                neuralNetwork.get(i-1).get(j).setWeights(newWeights);
+                neuralNetwork.get(i-1).get(j).setPreviousDeltaWeights(newPrevDeltaWeights);
+
+            }
+
+            prevGradients = localGradients;
+
+        }
+
+
     }
 
     //SETTERS

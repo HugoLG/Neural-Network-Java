@@ -8,7 +8,7 @@ public class Neuron {
     private Double h;
     private boolean biasNeuron;
     private Vector<Double> weights;
-    private Vector<Double> previousWeights;
+    private Vector<Double> previousDeltaWeights;
 
     //CONSTRUCTORS
     public Neuron() {
@@ -16,7 +16,7 @@ public class Neuron {
         this.h = 0.0;
         this.biasNeuron = false;
         this.weights = new Vector<Double>();
-        this.previousWeights = new Vector<Double>();
+        this.previousDeltaWeights = new Vector<Double>();
     }
 
     public Neuron(boolean bias) {
@@ -24,7 +24,7 @@ public class Neuron {
         this.h = 0.0;
         this.biasNeuron = bias;
         this.weights = new Vector<Double>();
-        this.previousWeights = new Vector<Double>();
+        this.previousDeltaWeights = new Vector<Double>();
     }
 
     public Neuron(int numConnections) {
@@ -32,11 +32,11 @@ public class Neuron {
         this.h = 0.0;
         this.biasNeuron = false;
         this.weights = new Vector<Double>();
-        this.previousWeights = new Vector<Double>();
+        this.previousDeltaWeights = new Vector<Double>();
         Random randNum = new Random();
         for(int i=0; i<numConnections; i++) {
             this.weights.add(randNum.nextDouble());
-            this.previousWeights.add(0.0);
+            this.previousDeltaWeights.add(0.0);
         }
     }
 
@@ -45,15 +45,16 @@ public class Neuron {
         this.h = 0.0;
         this.biasNeuron = bias;
         this.weights = new Vector<Double>();
-        this.previousWeights = new Vector<Double>();
+        this.previousDeltaWeights = new Vector<Double>();
         Random randNum = new Random();
         for(int i=0; i<numConnections; i++) {
             this.weights.add(randNum.nextDouble());
-            this.previousWeights.add(0.0);
+            this.previousDeltaWeights.add(0.0);
         }
     }
 
     //METHODS
+    /*
     public Double getDiffWeight(int pos) {
         return (this.weights.get(pos) - this.previousWeights.get(pos));
     }
@@ -65,6 +66,7 @@ public class Neuron {
         }
         return diffWeights;
     }
+    */
 
     public void print() {
         System.out.println("V: " + this.value + " H: " + this.h);
@@ -95,8 +97,8 @@ public class Neuron {
         this.weights = w;
     }
 
-    public void setPreviousWeights(Vector<Double> prevW) {
-        this.previousWeights = prevW;
+    public void setPreviousDeltaWeights(Vector<Double> prevDeltaW) {
+        this.previousDeltaWeights = prevDeltaW;
     }
 
     //GETTERS
@@ -116,8 +118,8 @@ public class Neuron {
         return this.weights;
     }
 
-    public Vector<Double> getPreviousWeights() {
-        return this.previousWeights;
+    public Vector<Double> getPreviousDeltaWeights() {
+        return this.previousDeltaWeights;
     }
 
     public Double getWeight(int pos) {
