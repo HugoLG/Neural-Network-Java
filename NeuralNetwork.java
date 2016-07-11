@@ -138,6 +138,31 @@ public class NeuralNetwork {
         }
     }
 
+    /**
+     *
+     *
+     */
+    public Vector<Double> calculateErrors(Vector<Double> target) {
+
+        Vector<Double> tmp = new Vector<Double>();
+
+        for(int i=0; i<target.size(); i++) {
+            tmp.add(target.get(i) - neuralNetwork.get(neuralNetwork.size()-1).get(i).getValue());
+        }
+
+        return tmp;
+
+    }
+
+    /**
+     *
+     *
+     *
+     */
+    public void backPropagation(Vector<Double> errors) {
+
+    }
+
     //SETTERS
     public void setLambda(double l) {
         this.lambda = l;
