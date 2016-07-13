@@ -1,4 +1,5 @@
 import java.util.Vector;
+import java.io.*;
 
 /**
  * FeedForward with Backpropagation Artificial Neural Network
@@ -96,6 +97,31 @@ public class NeuralNetwork {
     }
 
     public void trainNetwork(String trainingFilename) {
+
+        File file = new File(trainingFilename);
+
+        for(int epoch=0; epoch<epochLimit; epoch++) {
+
+            //read file and pass each row through training process
+            Scanner inputFile = new Scanner(file);
+            while(inputFile.hasNext()) {
+                String line = inputFile.nextLine();
+                String data[] = line.split(",");
+                Vector<Double> inputs = new Vector<Double>();
+
+                for(int i=0; i<data.length; i++) {
+                    inputs.add(Double.parseDouble(data[i]));
+                    //System.out.println("Data input #" + i + ":  " + inputs.get(i));
+                }
+
+                feedForward(inputs);
+                inputErrors = calculateErrors();
+                backPropagation(inputErrors);
+            }
+
+            //run network through validation data and check validation error
+        }
+
         //read training examples
         //send each example to forward and backpropagation
         //feedforward
@@ -159,6 +185,22 @@ public class NeuralNetwork {
      *
      *
      */
+    public Vector<Double> getOutputValues() {
+
+        Vector<Double> tmp = new Vector<Double>();
+
+        for(int i=0; i<neuralNetwork.get(neuralNetwork.size()-1).size(); i++) {
+            tmp.add(neuralNetwork.get(neuralNetwork.size()-1).get(i).getH());
+        }
+
+        return tmp;
+    }
+
+    /**
+     *
+     *
+     *
+     */
     public void backPropagation(Vector<Double> errors) {
 
         //First do the back propagation in the last layer
@@ -186,6 +228,7 @@ public class NeuralNetwork {
 
         }
 
+        //Back propagation learning in the rest of the layers
         Vector<Double> prevGradients = localGradientsOutputLayer;
         for(int i=neuralNetwork.size()-2; i>0; i--) {
 
