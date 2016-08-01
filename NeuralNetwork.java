@@ -167,6 +167,39 @@ public class NeuralNetwork {
     /**
      *
      *
+     *
+     *
+     */
+    public Vector<Double> predictValue(Vector<Double> inputs) {
+        for(int i=0; i<inputs.size(); i++) {
+            this.neuralNetwork.get(0).get(i).setValue(inputs.get(i));
+        }
+
+        //All layers will use the same activation function, if a layer uses another activation function
+        //modifications to this for has to be made
+        for(int i=1; i<this.neuralNetwork.size(); i++) {
+
+            for(int j=0; j<this.neuralNetwork.get(i).size(); j++) {
+                double tmpV = 0;
+                for(int k=0; k<this.neuralNetwork.get(i-1).size(); k++) {
+                    tmpV += (this.neuralNetwork.get(i-1).get(k).getValue() * this.neuralNetwork.get(i-1).get(k).getWeight(j));
+                }
+                this.neuralNetwork.get(i).get(j).setValue(tmpV);
+                this.neuralNetwork.get(i).get(j).calculateH(1, this.lambda);
+            }
+        }
+
+        Vector<Double> predictedOutput = new Vector<Double>();
+        for(int i=0; i<this.neuralNetwork.get(this.neuralNetwork.size()-1).size(); i++) {
+            predictedOutput.add(this.neuralNetwork.get(this.neuralNetwork.size()-1).get(i).getValue());
+        }
+
+        return predictedOutput;
+    }
+
+    /**
+     *
+     *
      */
     public Vector<Double> calculateErrors(Vector<Double> target) {
 
