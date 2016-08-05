@@ -1,4 +1,7 @@
 import java.util.Vector;
+import java.util.Scanner;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.io.*;
 
 /**
@@ -25,12 +28,14 @@ public class NeuralNetwork {
     private int numInputNeurons;
     private int numOutputNeurons;
     private int numHiddenNeurons;
+    private int epochLimit;
 
     //Constructor
-    public NeuralNetwork(Double l, Double e, Double a, int inNeurons, int numHiddenLayers, int hiddenNeurons, int outNeurons, boolean addHiddenBias) {
+    public NeuralNetwork(Double l, Double e, Double a, int epochs, int inNeurons, int numHiddenLayers, int hiddenNeurons, int outNeurons, boolean addHiddenBias) {
         this.lambda = l;
         this.eta = e;
         this.momentum = a;
+        this.epochLimit = epochs;
         this.numInputNeurons = inNeurons;
         this.numOutputNeurons = outNeurons;
         this.numHiddenNeurons = hiddenNeurons;
@@ -96,29 +101,72 @@ public class NeuralNetwork {
         System.out.println();
     }
 
+    public void saveToFile(String fname) throws IOException {
+        String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        BufferedWriter out = new BufferedWriter(new FileWriter("networkConfig_"+timeLog+".txt"));
+        out.write("Lambda: " + this.lambda);
+        out.write("Eta: " + this.eta);
+        out.write("Momentum: " + this.momentum);
+        out.write("Neural Network... ");
+        out.write("Input Layer: ");
+        for(int i=0; i<neuralNetwork.get(0).size(); i++) {
+            Double v = neuralNetwork.get(0).get(i).getValue();
+            Double h = neuralNetwork.get(0).get(i).getH();
+            out.write("V: " + v + " H: " + h);
+            out.write(" ");
+        }
+        out.write("\n");
+        out.write("Hidden Layers: ");
+        for(int i=1; i<neuralNetwork.size()-1; i++) {
+            for(int j=0; j<neuralNetwork.get(i).size(); j++) {
+                Double v = neuralNetwork.get(i).get(j).getValue();
+                Double h = neuralNetwork.get(i).get(j).getH();
+                out.write("V: " + v + " H: " + h);
+                out.write(" ");
+            }
+            out.write("\n");
+        }
+        out.write("Output Layer: ");
+        for(int i=0; i<neuralNetwork.get(neuralNetwork.size()-1).size(); i++) {
+            Double v = neuralNetwork.get(neuralNetwork.size()-1).get(i).getValue();
+            Double h = neuralNetwork.get(neuralNetwork.size()-1).get(i).getH();
+            out.write("V: " + v + " H: " + h);
+            out.write(" ");
+        }
+        out.write("\n");
+
+        out.close();
+    }
+
+
     public void trainNetwork(String trainingFilename) {
 
         File file = new File(trainingFilename);
 
-        for(int epoch=0; epoch<epochLimit; epoch++) {
+        for(int epoch=0; epoch<this.epochLimit; epoch++) {
 
             //read file and pass each row through training process
-            Scanner inputFile = new Scanner(file);
-            while(inputFile.hasNext()) {
-                String line = inputFile.nextLine();
-                String data[] = line.split(",");
-                Vector<Double> inputs = new Vector<Double>();
+            try {
+                Scanner inputFile = new Scanner(file);
+                while(inputFile.hasNext()) {
+                    String line = inputFile.nextLine();
+                    String data[] = line.split(",");
+                    Vector<Double> inputs = new Vector<Double>();
 
-                for(int i=0; i<data.length; i++) {
-                    inputs.add(Double.parseDouble(data[i]));
-                    //System.out.println("Data input #" + i + ":  " + inputs.get(i));
+                    for(int i=0; i<data.length; i++) {
+                        inputs.add(Double.parseDouble(data[i]));
+                        //System.out.println("Data input #" + i + ":  " + inputs.get(i));
+                    }
+
+                    feedForward(inputs);
+                    Vector<Double> inputErrors = new Vector<Double>();
+                    inputErrors = calculateErrors(inputs);
+                    backPropagation(inputErrors);
                 }
 
-                feedForward(inputs);
-                inputErrors = calculateErrors();
-                backPropagation(inputErrors);
+            } catch (FileNotFoundException e) {
+                System.out.println("Training file not found.");
             }
-
             //run network through validation data and check validation error
         }
 
