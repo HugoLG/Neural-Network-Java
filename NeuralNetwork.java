@@ -138,6 +138,16 @@ public class NeuralNetwork {
         out.close();
     }
 
+    public void outputErrors(Vector<Double> errors) throws IOException {
+
+        BufferedWriter out = new BufferedWriter(new FileWriter("errors.txt", true));
+
+        for(int i=0; i<errors.size(); i++) {
+            out.write(errors.get(i) + " ");
+        }
+        out.write("\n");
+        out.close();
+    }
 
     public void trainNetwork(String trainingFilename) {
 
@@ -159,9 +169,10 @@ public class NeuralNetwork {
                     }
 
                     feedForward(inputs);
-                    Vector<Double> inputErrors = new Vector<Double>();
-                    inputErrors = calculateErrors(inputs);
-                    backPropagation(inputErrors);
+                    Vector<Double> outputErrors = new Vector<Double>();
+                    outputErrors = calculateErrors(inputs);
+                    //errores must be saved
+                    backPropagation(outputErrors);
                 }
 
             } catch (FileNotFoundException e) {
