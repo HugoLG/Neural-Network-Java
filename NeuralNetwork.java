@@ -138,7 +138,7 @@ public class NeuralNetwork {
         out.close();
     }
 
-    public void outputErrors(Vector<Double> errors) throws IOException {
+    public void saveErrorsToFile(Vector<Double> errors) throws IOException {
 
         BufferedWriter out = new BufferedWriter(new FileWriter("errors.txt", true));
 
@@ -149,30 +149,41 @@ public class NeuralNetwork {
         out.close();
     }
 
-    public void trainNetwork(String trainingFilename) {
+    public void trainNetwork(String trainingFilename, String targetDataFilename) {
 
         File file = new File(trainingFilename);
+        File targetFile = new File(targetDataFilename);
 
         for(int epoch=0; epoch<this.epochLimit; epoch++) {
 
             //read file and pass each row through training process
             try {
                 Scanner inputFile = new Scanner(file);
-                while(inputFile.hasNext()) {
+                Scanner targetData = new Scanner(targetFile);
+                while(inputFile.hasNext() && targetData.hasNext()) {
                     String line = inputFile.nextLine();
                     String data[] = line.split(",");
                     Vector<Double> inputs = new Vector<Double>();
+
+                    String targetLine = targetData.nextLine();
+                    String outputs[] = targetLine.split(",");
+                    Vector<Double> targets = new Vector<Double>();
 
                     for(int i=0; i<data.length; i++) {
                         inputs.add(Double.parseDouble(data[i]));
                         //System.out.println("Data input #" + i + ":  " + inputs.get(i));
                     }
 
-                    feedForward(inputs);
+                    for(int i=0; i<outputs.length; i++) {
+                        targets.add(Double.parseDouble(outputs[i]));
+                        //System.out.println("Data input #" + i + ":  " + inputs.get(i));
+                    }
+
+                    feedForward(inputs); //predict output
                     Vector<Double> outputErrors = new Vector<Double>();
-                    outputErrors = calculateErrors(inputs);
-                    //errores must be saved
-                    backPropagation(outputErrors);
+                    outputErrors = calculateErrors(targets); //calculate errors
+                    saveErrorsToFile(outputErrors); //save errors to file for later analysis
+                    backPropagation(outputErrors); //learning part
                 }
 
             } catch (FileNotFoundException e) {
