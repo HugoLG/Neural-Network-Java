@@ -43,14 +43,14 @@ public class NeuralNetwork {
 
         Vector<Neuron> inputLayer = new Vector<Neuron>();
         for (int i=0; i<inNeurons; i++) {
-            Neuron n = new Neuron(numHiddenNeurons);
+            Neuron n = new Neuron(hiddenNeurons);
             inputLayer.add(n);
         }
         neuralNetwork.add(inputLayer);
 
         Vector<Neuron> hiddenLayer = new Vector<Neuron>();
         if(addHiddenBias) {
-            hiddenLayer.add(new Neuron(true));
+            hiddenLayer.add(new Neuron(true, numOutputNeurons));
         }
         for(int i=0; i<numHiddenLayers; i++) {
             for(int j=0; j<hiddenNeurons; j++) {
@@ -103,7 +103,7 @@ public class NeuralNetwork {
 
     public void saveToFile(String fname) throws IOException {
         String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        BufferedWriter out = new BufferedWriter(new FileWriter("networkConfig_"+timeLog+".txt"));
+        BufferedWriter out = new BufferedWriter(new FileWriter(fname + "_networkConfig_"+timeLog+".txt"));
         out.write("Lambda: " + this.lambda);
         out.write("Eta: " + this.eta);
         out.write("Momentum: " + this.momentum);
@@ -149,13 +149,14 @@ public class NeuralNetwork {
         out.close();
     }
 
-    public void trainNetwork(String trainingFilename, String targetDataFilename) {
+    public void trainNetwork(String trainingFilename, String targetDataFilename) throws IOException {
 
         File file = new File(trainingFilename);
         File targetFile = new File(targetDataFilename);
 
         for(int epoch=0; epoch<this.epochLimit; epoch++) {
 
+            System.out.println("Epoch number: " + (epoch+1));
             //read file and pass each row through training process
             try {
                 Scanner inputFile = new Scanner(file);
@@ -223,13 +224,21 @@ public class NeuralNetwork {
         //modifications to this for has to be made
         for(int i=1; i<neuralNetwork.size(); i++) {
 
+            int adjust = 0;
             for(int j=0; j<neuralNetwork.get(i).size(); j++) {
                 double tmpV = 0;
-                for(int k=0; k<neuralNetwork.get(i-1).size(); k++) {
-                    tmpV += (neuralNetwork.get(i-1).get(k).getValue() * neuralNetwork.get(i-1).get(k).getWeight(j));
+
+                if(neuralNetwork.get(i).get(j).getBiasNeuron()) {
+                    adjust++;
+                    neuralNetwork.get(i).get(j).setValue(1.0);
+                    neuralNetwork.get(i).get(j).setH(1.0);
+                } else {
+                    for(int k=0; k<neuralNetwork.get(i-1).size(); k++) {
+                        tmpV += (neuralNetwork.get(i-1).get(k).getValue() * neuralNetwork.get(i-1).get(k).getWeight(j-adjust));
+                    }
+                    neuralNetwork.get(i).get(j).setValue(tmpV);
+                    neuralNetwork.get(i).get(j).calculateH(1, this.lambda);
                 }
-                neuralNetwork.get(i).get(j).setValue(tmpV);
-                neuralNetwork.get(i).get(j).calculateH(1, this.lambda);
             }
         }
     }
@@ -249,13 +258,20 @@ public class NeuralNetwork {
         //modifications to this for has to be made
         for(int i=1; i<this.neuralNetwork.size(); i++) {
 
+            int adjust = 0;
             for(int j=0; j<this.neuralNetwork.get(i).size(); j++) {
                 double tmpV = 0;
-                for(int k=0; k<this.neuralNetwork.get(i-1).size(); k++) {
-                    tmpV += (this.neuralNetwork.get(i-1).get(k).getValue() * this.neuralNetwork.get(i-1).get(k).getWeight(j));
+                if(this.neuralNetwork.get(i).get(j).getBiasNeuron()) {
+                    adjust++;
+                    neuralNetwork.get(i).get(j).setValue(1.0);
+                    neuralNetwork.get(i).get(j).setH(1.0);
+                } else {
+                    for(int k=0; k<this.neuralNetwork.get(i-1).size(); k++) {
+                        tmpV += (this.neuralNetwork.get(i-1).get(k).getValue() * this.neuralNetwork.get(i-1).get(k).getWeight(j-adjust));
+                    }
+                    this.neuralNetwork.get(i).get(j).setValue(tmpV);
+                    this.neuralNetwork.get(i).get(j).calculateH(1, this.lambda);
                 }
-                this.neuralNetwork.get(i).get(j).setValue(tmpV);
-                this.neuralNetwork.get(i).get(j).calculateH(1, this.lambda);
             }
         }
 
@@ -352,11 +368,16 @@ public class NeuralNetwork {
                 Vector<Double> newWeights = new Vector<Double>();
                 Vector<Double> newPrevDeltaWeights = new Vector<Double>();
 
+                int adjust = 0;
                 for(int k=0; k<neuralNetwork.get(i).size(); k++) {
-                    Double deltaWeight = this.eta*localGradients.get(k)*neuralNetwork.get(i-1).get(k).getH()
-                        + this.momentum*prevDeltaWeights.get(k);
-                    newPrevDeltaWeights.add(deltaWeight);
-                    newWeights.add(weights.get(j)+deltaWeight);
+                    if(!neuralNetwork.get(i).get(k).getBiasNeuron()) {
+                        Double deltaWeight = this.eta*localGradients.get(k)*neuralNetwork.get(i-1).get(j).getH()
+                            + this.momentum*prevDeltaWeights.get(k-adjust);
+                        newPrevDeltaWeights.add(deltaWeight);
+                        newWeights.add(weights.get(j)+deltaWeight);
+                    } else {
+                        adjust++;
+                    }
                 }
 
                 neuralNetwork.get(i-1).get(j).setWeights(newWeights);
